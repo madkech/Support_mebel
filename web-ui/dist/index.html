@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kitchen Calculator — Расчёт кухни</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="module" crossorigin src="/assets/index-CKACHS39.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CaeYh08Q.css">
+</head>
+<body>
+  <header style="
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 1rem 0;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  ">
+    <div class="container" style="display:flex;align-items:center;gap:0.75rem;">
+      <span style="font-size:1.5rem;">🍳</span>
+      <div>
+        <h1 style="font-size:1.25rem;font-weight:700;">Kitchen Calculator</h1>
+        <p style="font-size:0.8125rem;color:var(--color-text-secondary);">Расчёт прямой кухни по одной стене</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div style="display:grid;grid-template-columns: 380px 1fr;gap:1.5rem;align-items:start;">
+      <div id="form-container"></div>
+      <div id="results-container">
+        <div class="empty-state">
+          <p style="font-size:1.25rem;margin-bottom:0.5rem;">📐 Заполните параметры и нажмите «Рассчитать»</p>
+          <p style="font-size:0.875rem;">Будут рассчитаны: высоты модулей, фартук, столешница, доборы, спецификация деталей.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="
+    margin-top: 3rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: 0.8125rem;
+    text-align: center;
+  ">
+    Kitchen Calculator MVP &mdash; только прямые кухни
+  </footer>
+
+</body>
+</html>

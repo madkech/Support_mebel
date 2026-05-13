@@ -1,0 +1,12 @@
+{
+  "layoutType": "straight",
+  "wallLengthMm": 2400,
+  "ceilingHeightMm": 2600,
+  "wallCabinetDefaultHeightMm": 720,
+  "backsplashType": "client_tile_existing",
+  "cooktopType": "gas",
+  "hasHoodCabinet": true,
+  "hasBuiltInMicrowave": true,
+  "hasRecessedLighting": true,
+  "autoModuleWidthMm": 600
+}

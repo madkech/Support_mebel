@@ -1,0 +1,219 @@
+.layout-scheme {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+}
+
+.layout-scheme h3 {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.scheme-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.scheme-row {
+  display: flex;
+  gap: 2px;
+  align-items: stretch;
+}
+
+.scheme-row__label {
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  width: 3.5rem;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.scheme-cell {
+  flex: 1;
+  min-width: 3rem;
+  padding: 0.5rem 0.375rem;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  color: white;
+  position: relative;
+}
+
+.scheme-cell .scheme-cell__type {
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.scheme-cell .scheme-cell__width {
+  font-size: 0.625rem;
+  opacity: 0.85;
+}
+
+.scheme-cell--sink { background: #0891b2; }
+.scheme-cell--dishwasher { background: #7c3aed; }
+.scheme-cell--cooktop { background: #dc2626; }
+.scheme-cell--stove { background: #be123c; }
+.scheme-cell--drawers { background: #059669; }
+.scheme-cell--standard { background: #6366f1; }
+.scheme-cell--dish_dryer { background: #0d9488; }
+.scheme-cell--hood { background: #d97706; }
+.scheme-cell--built_in_microwave { background: #9333ea; }
+.scheme-cell--filler { background: #94a3b8; }
+
+.scheme-cell--upper {
+  opacity: 0.85;
+}
+
+.scheme-cell--upper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255,255,255,0.3);
+}
+
+.scheme-dimensions {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  padding: 0.25rem 0;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 640px) {
+  .scheme-cell {
+    min-width: 2rem;
+    padding: 0.375rem 0.25rem;
+    font-size: 0.625rem;
+  }
+}
+
+/* 🪟 Модальное окно */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 1.5rem;
+  min-width: 320px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.modal-box h3 {
+  font-size: 1rem;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.modal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.modal-fields label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.modal-input {
+  flex: 1;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: var(--font-mono);
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.modal-fields input[type="color"] {
+  height: 2rem;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Стили для кликабельных ячеек */
+.scheme-cell-clickable {
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.scheme-cell-clickable:hover {
+  filter: brightness(1.15);
+  transform: scale(1.03);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.scheme-cell-clickable:active {
+  transform: scale(0.97);
+}
+
+/* Drag-and-drop */
+.scheme-cell-clickable[draggable="true"] {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.scheme-cell-clickable[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.scheme-cell-clickable.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.scheme-cell-clickable.drag-over {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -2px;
+  filter: brightness(1.2);
+  transform: scale(1.05);
+}

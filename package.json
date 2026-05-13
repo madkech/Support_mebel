@@ -1,0 +1,15 @@
+{
+  "name": "kitchen-calculator-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "calculate": "node src/cli.ts",
+    "demo": "node src/cli.ts examples/director-demo.json",
+    "demo:interactive": "node src/cli.ts",
+    "test": "node --test src/tests/*.test.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0"
+  }
+}

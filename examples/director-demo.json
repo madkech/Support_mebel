@@ -1,0 +1,17 @@
+{
+  "layoutType": "straight",
+  "wallLengthMm": 3000,
+  "ceilingHeightMm": 2700,
+  "roomHeightIncludesStretchCeiling": true,
+  "backsplashType": "our_ldsp_backsplash",
+  "cooktopType": "gas",
+  "hasGolaProfile": true,
+  "hasDishwasher": true,
+  "hasSinkCabinet": true,
+  "hasDishDryerCabinet": true,
+  "hasHoodCabinet": true,
+  "hasBuiltInMicrowave": true,
+  "hasRecessedLighting": true,
+  "hasDrawersCabinet": true,
+  "autoModuleWidthMm": 600
+}
