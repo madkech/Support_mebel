@@ -1,5 +1,5 @@
 import type { KitchenProject } from '../bridge.ts';
-import { backsplashLabels, cooktopLabels } from '../utils/labels.ts';
+import { backsplashLabels, cooktopLabels, facadeMaterialLabels } from '../utils/labels.ts';
 import { formatBoolean } from '../utils/format.ts';
 import { renderModuleTable } from './module-table.ts';
 import { renderLayoutScheme } from './layout-scheme.ts';
@@ -77,6 +77,10 @@ export function renderResults(
     <div class="summary-item">
       <span class="summary-item__label">Бортик</span>
       <span class="summary-item__value">${formatBoolean(project.countertopUpstand)}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-item__label">Фасады</span>
+      <span class="summary-item__value">${facadeMaterialLabels[project.facadeMaterial] ?? project.facadeMaterial} ${project.facadeThicknessMm} мм</span>
     </div>
     <div class="summary-item">
       <span class="summary-item__label">Варочная панель</span>
