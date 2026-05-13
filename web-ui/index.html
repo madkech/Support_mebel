@@ -7,32 +7,19 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 </head>
 <body>
-  <header style="
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-    padding: 1rem 0;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-sm);
-  ">
+  <header class="app-header">
     <div class="container" style="display:flex;align-items:center;gap:0.75rem;">
-      <span style="font-size:1.5rem;">🍳</span>
+      <div class="app-logo">🍳</div>
       <div>
-        <h1 style="font-size:1.25rem;font-weight:700;">Kitchen Calculator</h1>
-        <p style="font-size:0.8125rem;color:var(--color-text-secondary);">Расчёт прямой кухни по одной стене</p>
+        <h1>Kitchen Calculator</h1>
+        <p class="app-subtitle">Расчёт прямой кухни по одной стене</p>
       </div>
     </div>
   </header>
 
-  <main class="container">
-    <div style="display:grid;grid-template-columns: 380px 1fr;gap:1.5rem;align-items:start;">
-      <div id="form-container"></div>
-      <div id="results-container">
-        <div class="empty-state">
-          <p style="font-size:1.25rem;margin-bottom:0.5rem;">📐 Заполните параметры и нажмите «Рассчитать»</p>
-          <p style="font-size:0.875rem;">Будут рассчитаны: высоты модулей, фартук, столешница, доборы, спецификация деталей.</p>
-        </div>
-      </div>
-    </div>
+  <main class="app-main">
+    <aside class="app-sidebar" id="form-container"></aside>
+    <section class="app-content" id="results-container"></section>
   </main>
 
   <footer style="

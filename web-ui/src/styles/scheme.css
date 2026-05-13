@@ -195,25 +195,15 @@
   transform: scale(0.97);
 }
 
-/* Drag-and-drop */
-.scheme-cell-clickable[draggable="true"] {
+/* Drag-and-drop (mouse-based) */
+.scheme-cell-clickable {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 
-.scheme-cell-clickable[draggable="true"]:active {
+.scheme-cell-clickable:active {
   cursor: grabbing;
-}
-
-.scheme-cell-clickable.dragging {
-  opacity: 0.4;
-  transform: scale(0.95);
-}
-
-.scheme-cell-clickable.drag-over {
-  outline: 2px dashed var(--color-primary);
-  outline-offset: -2px;
-  filter: brightness(1.2);
-  transform: scale(1.05);
 }

@@ -117,155 +117,190 @@ export function renderLayoutScheme(
   const saveBtn = document.getElementById('modal-save')!;
   const cancelBtn = document.getElementById('modal-cancel')!;
 
-  // --- HTML5 Drag & Drop (чистый, без стрелок) ---
-  const oldDnD = (container as any).__schemeDnDHandler as { destroy: () => void } | undefined;
-  if (oldDnD) oldDnD.destroy();
+  // --- Mouse-based Drag & Drop (надёжнее HTML5 DnD) + Клик для модалки ---
+  const oldHandler = (container as any).__schemeMouseHandler as { destroy: () => void } | undefined;
+  if (oldHandler) oldHandler.destroy();
 
-  let dragSrcIdx: number | null = null;
-  let dragSrcLevel: 'upper' | 'lower' | null = null;
-  let isDragging = false; // флаг для блокировки click-обработчика во время DnD
+  let mouseDragIdx: number | null = null;
+  let mouseDragLevel: 'upper' | 'lower' | null = null;
+  let mouseDownX = 0;
+  let mouseDownY = 0;
+  let mouseIsDragging = false;
+  let mouseWasDragged = false; // был ли реально сдвиг мыши
 
-  function clearDnD() {
+  function clearMouseDrag() {
     container.querySelectorAll('.scheme-cell-clickable').forEach(c => {
       (c as HTMLElement).style.outline = '';
       (c as HTMLElement).style.opacity = '';
     });
-    dragSrcIdx = null;
-    dragSrcLevel = null;
-    isDragging = false;
+    mouseDragIdx = null;
+    mouseDragLevel = null;
+    mouseIsDragging = false;
+    mouseWasDragged = false;
   }
 
-  const dnd = {
-    dragstart(e: DragEvent) {
+  function getHoveredCell(px: number, py: number): HTMLElement | null {
+    // Ищем элемент под координатами мыши
+    const el = document.elementFromPoint(px, py);
+    if (!el) return null;
+    return (el as HTMLElement).closest('.scheme-cell-clickable') as HTMLElement | null;
+  }
+
+  const mouseHandler = {
+    // mousedown — начало перетаскивания
+    mousedown(e: MouseEvent) {
       const cell = (e.target as HTMLElement).closest('.scheme-cell-clickable') as HTMLElement | null;
-      if (!cell) { console.log('🟢 dragstart: no cell'); return; }
-      console.log('🟢 dragstart:', cell.dataset.level, cell.dataset.index, 'draggable:', (cell as HTMLElement).draggable);
-      isDragging = true;
-      dragSrcIdx = parseInt(cell.dataset.index || '', 10);
-      dragSrcLevel = cell.dataset.level as 'upper' | 'lower';
-      e.dataTransfer!.setData('text/plain', `${dragSrcLevel}:${dragSrcIdx}`);
-      e.dataTransfer!.effectAllowed = 'move';
-      cell.style.opacity = '0.4';
-    },
-    dragover(e: DragEvent) {
-      const cell = (e.target as HTMLElement).closest('.scheme-cell-clickable') as HTMLElement | null;
-      if (!cell || dragSrcIdx === null || !dragSrcLevel) { console.log('🟡 dragover: skip, no drag context'); return; }
-      if (cell.dataset.level !== dragSrcLevel) { console.log('🟡 dragover: wrong level', cell.dataset.level, '!=', dragSrcLevel); return; }
+      if (!cell) return;
+      if (e.button !== 0) return; // только левая кнопка
       e.preventDefault();
-      console.log('🟡 dragover:', cell.dataset.level, cell.dataset.index);
-      e.dataTransfer!.dropEffect = 'move';
+
+      mouseDragIdx = parseInt(cell.dataset.index || '', 10);
+      mouseDragLevel = cell.dataset.level as 'upper' | 'lower';
+      mouseDownX = e.clientX;
+      mouseDownY = e.clientY;
+      mouseIsDragging = true;
+      mouseWasDragged = false;
+    },
+
+    // mousemove — перемещение
+    mousemove(e: MouseEvent) {
+      if (!mouseIsDragging || mouseDragIdx === null || !mouseDragLevel) return;
+
+      // Считаем дистанцию от точки нажатия
+      const dx = e.clientX - mouseDownX;
+      const dy = e.clientY - mouseDownY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 5) return; // порог 5px — игнорируем дрожание мыши
+
+      mouseWasDragged = true;
+      console.log('🟢 DnD active! dist:', Math.round(dist), 'from:', mouseDragLevel, mouseDragIdx);
+
+      // Подсвечиваем ячейку под курсором
+      const hovered = getHoveredCell(e.clientX, e.clientY);
       container.querySelectorAll('.scheme-cell-clickable').forEach(c => {
         (c as HTMLElement).style.outline = '';
       });
-      cell.style.outline = '2px dashed var(--color-primary)';
+      if (hovered && hovered.dataset.level === mouseDragLevel) {
+        hovered.style.outline = '2px dashed var(--color-primary)';
+      }
+
+      // Делаем исходную ячейку полупрозрачной
+      container.querySelectorAll('.scheme-cell-clickable').forEach(c => {
+        const idx = parseInt((c as HTMLElement).dataset.index || '', 10);
+        const lvl = (c as HTMLElement).dataset.level;
+        if (idx === mouseDragIdx && lvl === mouseDragLevel) {
+          (c as HTMLElement).style.opacity = '0.4';
+        }
+      });
     },
-    drop(e: DragEvent) {
-      e.preventDefault();
-      console.log('🔴 drop fired!');
+
+    // mouseup — завершение перетаскивания (drop)
+    mouseup(e: MouseEvent) {
+      console.log('🟡 mouseup:', 'wasDragged:', mouseWasDragged, 'dragging:', mouseIsDragging, 'idx:', mouseDragIdx, 'level:', mouseDragLevel);
+      if (!mouseIsDragging || mouseDragIdx === null || !mouseDragLevel) {
+        mouseIsDragging = false;
+        return;
+      }
+
+      if (mouseWasDragged) {
+        // Было перетаскивание — выполняем reorder
+        const hovered = getHoveredCell(e.clientX, e.clientY);
+        if (hovered && onReorder) {
+          const targetLevel = hovered.dataset.level as 'upper' | 'lower';
+          const targetIdx = parseInt(hovered.dataset.index || '', 10);
+          if (targetLevel === mouseDragLevel && targetIdx !== mouseDragIdx) {
+            onReorder(mouseDragLevel, mouseDragIdx, targetIdx);
+          }
+        }
+        clearMouseDrag();
+        return; // НЕ открываем модалку
+      }
+
+      // Не было перетаскивания — это обычный клик, открываем модалку
+      clearMouseDrag();
+
       const cell = (e.target as HTMLElement).closest('.scheme-cell-clickable') as HTMLElement | null;
-      if (!cell) { console.log('🔴 drop: no target cell'); clearDnD(); return; }
-      if (dragSrcIdx === null || !dragSrcLevel) { console.log('🔴 drop: no drag source'); clearDnD(); return; }
-      if (!onReorder) { console.log('🔴 drop: no onReorder callback'); clearDnD(); return; }
-      const targetLevel = cell.dataset.level as 'upper' | 'lower';
-      const targetIdx = parseInt(cell.dataset.index || '', 10);
-      console.log('🔴 drop target:', targetLevel, targetIdx, 'from:', dragSrcLevel, dragSrcIdx);
-      if (targetLevel !== dragSrcLevel || targetIdx === dragSrcIdx) { console.log('🔴 drop: same position'); clearDnD(); return; }
-      onReorder(dragSrcLevel, dragSrcIdx, targetIdx);
-      clearDnD();
+      if (!cell) return;
+      const id = cell.dataset.id || '';
+      const idx = parseInt(cell.dataset.index || '0', 10);
+      const level = cell.dataset.level as 'upper' | 'lower';
+      const cabinet = level === 'upper' ? wallCabinets[idx] : baseCabinets[idx];
+      if (!cabinet) return;
+
+      const ov = overrides[id] || {};
+      modalTitle.textContent = `Редактирование: ${ov.customName || cabinetMiniLabel(cabinet.type)}`;
+      modalName.value = ov.customName || '';
+      modalWidth.value = String(cabinet.widthMm);
+      modalHeight.value = String(cabinet.heightMm);
+      modalDepth.value = String(cabinet.depthMm);
+      modalColor.value = ov.customColor || '#6366f1';
+      modal!.style.display = 'flex';
+
+      // Убираем старые обработчики с кнопок
+      const newSave = saveBtn.cloneNode(true) as HTMLElement;
+      const newCancel = cancelBtn.cloneNode(true) as HTMLElement;
+      saveBtn.parentNode?.replaceChild(newSave, saveBtn);
+      cancelBtn.parentNode?.replaceChild(newCancel, cancelBtn);
+
+      newSave.addEventListener('click', () => {
+        const newName = modalName.value.trim();
+        const newColor = modalColor.value;
+        const newWidth = parseInt(modalWidth.value, 10);
+        const newHeight = parseInt(modalHeight.value, 10);
+        const newDepth = parseInt(modalDepth.value, 10);
+
+        const update: ModuleOverride = {};
+        if (newName) update.customName = newName;
+        if (newColor) update.customColor = newColor;
+        if (Object.keys(update).length > 0) {
+          overrides[id] = { ...(overrides[id] || {}), ...update };
+        } else {
+          delete overrides[id];
+        }
+        saveOverrides(overrides);
+
+        const hasSizeChanges =
+          newWidth !== cabinet.widthMm ||
+          newHeight !== cabinet.heightMm ||
+          newDepth !== cabinet.depthMm;
+
+        if (hasSizeChanges && onEdit) {
+          onEdit(id, {
+            widthMm: newWidth !== cabinet.widthMm ? newWidth : undefined,
+            heightMm: newHeight !== cabinet.heightMm ? newHeight : undefined,
+            depthMm: newDepth !== cabinet.depthMm ? newDepth : undefined,
+          });
+        } else {
+          renderLayoutScheme(container, project, onEdit, onReorder);
+        }
+        modal!.style.display = 'none';
+      });
+
+      newCancel.addEventListener('click', () => {
+        modal!.style.display = 'none';
+      });
     },
-    dragend() { console.log('🔵 dragend'); clearDnD(); },
   };
 
-  container.addEventListener('dragstart', dnd.dragstart);
-  container.addEventListener('dragover', dnd.dragover);
-  container.addEventListener('drop', dnd.drop);
-  container.addEventListener('dragend', dnd.dragend);
+  container.addEventListener('mousedown', mouseHandler.mousedown);
+  container.addEventListener('mousemove', mouseHandler.mousemove);
+  container.addEventListener('mouseup', mouseHandler.mouseup);
 
-  (container as any).__schemeDnDHandler = {
+  // Отмена при уходе мыши за пределы контейнера
+  container.addEventListener('mouseleave', () => {
+    if (mouseIsDragging) {
+      clearMouseDrag();
+    }
+  });
+
+  (container as any).__schemeMouseHandler = {
     destroy: () => {
-      container.removeEventListener('dragstart', dnd.dragstart);
-      container.removeEventListener('dragover', dnd.dragover);
-      container.removeEventListener('drop', dnd.drop);
-      container.removeEventListener('dragend', dnd.dragend);
+      container.removeEventListener('mousedown', mouseHandler.mousedown);
+      container.removeEventListener('mousemove', mouseHandler.mousemove);
+      container.removeEventListener('mouseup', mouseHandler.mouseup);
     },
   };
-
-  // --- Клик (только модалка редактирования, без стрелок) ---
-  const oldClick = (container as any).__schemeClickHandler as ((e: MouseEvent) => void) | undefined;
-  if (oldClick) container.removeEventListener('click', oldClick);
-
-  const clickHandler = (e: MouseEvent) => {
-    // Пропускаем клик, если была операция перетаскивания
-    if (isDragging) { console.log('🟣 click blocked: isDragging = true'); return; }
-    const target = (e.target as HTMLElement).closest('.scheme-cell-clickable') as HTMLElement | null;
-    if (!target) return;
-    console.log('🟣 click on cell:', target.dataset.level, target.dataset.index, 'isDragging:', isDragging);
-
-    const id = target.dataset.id || '';
-    const idx = parseInt(target.dataset.index || '0', 10);
-    const level = target.dataset.level as 'upper' | 'lower';
-    const cabinet = level === 'upper' ? wallCabinets[idx] : baseCabinets[idx];
-    if (!cabinet) return;
-
-    // ❌ ВРЕМЕННО ОТКЛЮЧЕНО — модалка не открывается, чтобы проверить DnD
-    // const ov = overrides[id] || {};
-    // modalTitle.textContent = `Редактирование: ${ov.customName || cabinetMiniLabel(cabinet.type)}`;
-    // modalName.value = ov.customName || '';
-    // modalWidth.value = String(cabinet.widthMm);
-    // modalHeight.value = String(cabinet.heightMm);
-    // modalDepth.value = String(cabinet.depthMm);
-    // modalColor.value = ov.customColor || '#6366f1';
-    // modal!.style.display = 'flex';
-
-    // Убираем старые обработчики с кнопок
-    const newSave = saveBtn.cloneNode(true) as HTMLElement;
-    const newCancel = cancelBtn.cloneNode(true) as HTMLElement;
-    saveBtn.parentNode?.replaceChild(newSave, saveBtn);
-    cancelBtn.parentNode?.replaceChild(newCancel, cancelBtn);
-
-    newSave.addEventListener('click', () => {
-      const newName = modalName.value.trim();
-      const newColor = modalColor.value;
-      const newWidth = parseInt(modalWidth.value, 10);
-      const newHeight = parseInt(modalHeight.value, 10);
-      const newDepth = parseInt(modalDepth.value, 10);
-
-      const update: ModuleOverride = {};
-      if (newName) update.customName = newName;
-      if (newColor) update.customColor = newColor;
-      if (Object.keys(update).length > 0) {
-        overrides[id] = { ...(overrides[id] || {}), ...update };
-      } else {
-        delete overrides[id];
-      }
-      saveOverrides(overrides);
-
-      // Проверяем, изменились ли размеры
-      const hasSizeChanges =
-        newWidth !== cabinet.widthMm ||
-        newHeight !== cabinet.heightMm ||
-        newDepth !== cabinet.depthMm;
-
-      if (hasSizeChanges && onEdit) {
-        onEdit(id, {
-          widthMm: newWidth !== cabinet.widthMm ? newWidth : undefined,
-          heightMm: newHeight !== cabinet.heightMm ? newHeight : undefined,
-          depthMm: newDepth !== cabinet.depthMm ? newDepth : undefined,
-        });
-      } else {
-        // Только название/цвет — перерисовываем схему без пересчёта
-        renderLayoutScheme(container, project, onEdit, onReorder);
-      }
-      modal!.style.display = 'none';
-    });
-
-    newCancel.addEventListener('click', () => {
-      modal!.style.display = 'none';
-    });
-  };
-
-  container.addEventListener('click', clickHandler);
-  (container as any).__schemeClickHandler = clickHandler;
 }
 
 function createCell(
@@ -287,8 +322,7 @@ function createCell(
          data-level="${level}"
          data-type="${type}"
          data-index="${index ?? ''}"
-         draggable="${id ? 'true' : 'false'}"
-         title="${label} ${widthMm ?? ''} мм${id ? ' — нажмите для редактирования, перетащите для перемещения' : ''}">
+         title="${label} ${widthMm ?? ''} мм${id ? ' — клик: редактировать, зажать и перетащить: поменять местами' : ''}">
       <span class="scheme-cell__type">${label}</span>
       ${widthMm !== undefined ? `<span class="scheme-cell__width">${widthMm}</span>` : ''}
     </div>
