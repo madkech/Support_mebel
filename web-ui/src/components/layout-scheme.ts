@@ -138,7 +138,8 @@ export function renderLayoutScheme(
   const dnd = {
     dragstart(e: DragEvent) {
       const cell = (e.target as HTMLElement).closest('.scheme-cell-clickable') as HTMLElement | null;
-      if (!cell) return;
+      if (!cell) { console.log('🟢 dragstart: no cell'); return; }
+      console.log('🟢 dragstart:', cell.dataset.level, cell.dataset.index, 'draggable:', (cell as HTMLElement).draggable);
       isDragging = true;
       dragSrcIdx = parseInt(cell.dataset.index || '', 10);
       dragSrcLevel = cell.dataset.level as 'upper' | 'lower';
@@ -148,9 +149,10 @@ export function renderLayoutScheme(
     },
     dragover(e: DragEvent) {
       const cell = (e.target as HTMLElement).closest('.scheme-cell-clickable') as HTMLElement | null;
-      if (!cell || dragSrcIdx === null || !dragSrcLevel) return;
-      if (cell.dataset.level !== dragSrcLevel) return;
+      if (!cell || dragSrcIdx === null || !dragSrcLevel) { console.log('🟡 dragover: skip, no drag context'); return; }
+      if (cell.dataset.level !== dragSrcLevel) { console.log('🟡 dragover: wrong level', cell.dataset.level, '!=', dragSrcLevel); return; }
       e.preventDefault();
+      console.log('🟡 dragover:', cell.dataset.level, cell.dataset.index);
       e.dataTransfer!.dropEffect = 'move';
       container.querySelectorAll('.scheme-cell-clickable').forEach(c => {
         (c as HTMLElement).style.outline = '';
@@ -159,15 +161,19 @@ export function renderLayoutScheme(
     },
     drop(e: DragEvent) {
       e.preventDefault();
+      console.log('🔴 drop fired!');
       const cell = (e.target as HTMLElement).closest('.scheme-cell-clickable') as HTMLElement | null;
-      if (!cell || dragSrcIdx === null || !dragSrcLevel || !onReorder) { clearDnD(); return; }
+      if (!cell) { console.log('🔴 drop: no target cell'); clearDnD(); return; }
+      if (dragSrcIdx === null || !dragSrcLevel) { console.log('🔴 drop: no drag source'); clearDnD(); return; }
+      if (!onReorder) { console.log('🔴 drop: no onReorder callback'); clearDnD(); return; }
       const targetLevel = cell.dataset.level as 'upper' | 'lower';
       const targetIdx = parseInt(cell.dataset.index || '', 10);
-      if (targetLevel !== dragSrcLevel || targetIdx === dragSrcIdx) { clearDnD(); return; }
+      console.log('🔴 drop target:', targetLevel, targetIdx, 'from:', dragSrcLevel, dragSrcIdx);
+      if (targetLevel !== dragSrcLevel || targetIdx === dragSrcIdx) { console.log('🔴 drop: same position'); clearDnD(); return; }
       onReorder(dragSrcLevel, dragSrcIdx, targetIdx);
       clearDnD();
     },
-    dragend() { clearDnD(); },
+    dragend() { console.log('🔵 dragend'); clearDnD(); },
   };
 
   container.addEventListener('dragstart', dnd.dragstart);
@@ -190,9 +196,10 @@ export function renderLayoutScheme(
 
   const clickHandler = (e: MouseEvent) => {
     // Пропускаем клик, если была операция перетаскивания
-    if (isDragging) return;
+    if (isDragging) { console.log('🟣 click blocked: isDragging = true'); return; }
     const target = (e.target as HTMLElement).closest('.scheme-cell-clickable') as HTMLElement | null;
     if (!target) return;
+    console.log('🟣 click on cell:', target.dataset.level, target.dataset.index, 'isDragging:', isDragging);
 
     const id = target.dataset.id || '';
     const idx = parseInt(target.dataset.index || '0', 10);
@@ -200,14 +207,15 @@ export function renderLayoutScheme(
     const cabinet = level === 'upper' ? wallCabinets[idx] : baseCabinets[idx];
     if (!cabinet) return;
 
-    const ov = overrides[id] || {};
-    modalTitle.textContent = `Редактирование: ${ov.customName || cabinetMiniLabel(cabinet.type)}`;
-    modalName.value = ov.customName || '';
-    modalWidth.value = String(cabinet.widthMm);
-    modalHeight.value = String(cabinet.heightMm);
-    modalDepth.value = String(cabinet.depthMm);
-    modalColor.value = ov.customColor || '#6366f1';
-    modal!.style.display = 'flex';
+    // ❌ ВРЕМЕННО ОТКЛЮЧЕНО — модалка не открывается, чтобы проверить DnD
+    // const ov = overrides[id] || {};
+    // modalTitle.textContent = `Редактирование: ${ov.customName || cabinetMiniLabel(cabinet.type)}`;
+    // modalName.value = ov.customName || '';
+    // modalWidth.value = String(cabinet.widthMm);
+    // modalHeight.value = String(cabinet.heightMm);
+    // modalDepth.value = String(cabinet.depthMm);
+    // modalColor.value = ov.customColor || '#6366f1';
+    // modal!.style.display = 'flex';
 
     // Убираем старые обработчики с кнопок
     const newSave = saveBtn.cloneNode(true) as HTMLElement;

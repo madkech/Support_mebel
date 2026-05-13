@@ -61,6 +61,7 @@ export function calculateWallCabinet(params: {
     hasRecessedLighting,
     hasBuiltInMicrowave,
     isHoodCabinet,
+    vitrine: params.input.vitrine,
     construction,
     parts: calculateCabinetParts({
       widthMm: params.input.widthMm,
